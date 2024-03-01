@@ -1,19 +1,28 @@
 #include "OneWire.h"
 #include "DallasTemperature.h"
- 
-OneWire oneWire(4);
-DallasTemperature ds(&oneWire);
+#include "RelaysBoard.h"
+
+OneWire vOneWire1(38);
+OneWire vOneWire2(39);
+DallasTemperature vDT1(&vOneWire1);
+DallasTemperature vDT2(&vOneWire2);
+RelaysBoard RelaysBoard(22);
 
 void setup() {
   Serial.begin(9600);  // définition de l'ouverture du port série
-  ds.begin();          // sonde activée
+  vDT1.begin();          // sonde activée
+  vDT2.begin();          // sonde activée
 }
 
 void loop() {
-  ds.requestTemperatures();
-  int t = ds.getTempCByIndex(0);
+  vDT1.requestTemperatures();
+  int vT1 = vDT1.getTempCByIndex(0);
+  vDT2.requestTemperatures();
+  int vT2 = vDT2.getTempCByIndex(0);
  
-  Serial.print(t);
+  Serial.print(vT1);
+  Serial.println( "C");
+  Serial.print(vT2);
   Serial.println( "C");
  
   delay(1000);

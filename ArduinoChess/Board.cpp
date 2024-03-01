@@ -1,18 +1,18 @@
-/* #include "Board.h"
-#include "Piece.h"
+#include "Board.h"
+// #include "Piece.h"
 
-Board::Board(Player* pPlayer1, Player* pPlayer2)
+void mCreateBoard()
 {
     Serial.println("Creating Cells ... ");
     this->aCells = new List<List<Cell>>();
-    for(int vY = 0; vY < 8; vY++)
+    for(int vY = 0; vY < cBoardSize; vY++)
     {
         Serial.print("Creating Row ");
         Serial.print(vY+1);
         Serial.print("... ");
         this->aCells->mAdd(new List<Cell>());
         Serial.println("Done !");
-        for(int vX = 0; vX < 8; vX++)
+        for(int vX = 0; vX < cBoardSize; vX++)
         {
             Serial.print("Creating Cell ");
             Serial.print((vX+1) * (vY+1));
