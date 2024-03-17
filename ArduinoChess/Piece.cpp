@@ -1,75 +1,121 @@
-/* #include "Piece.h"
+#include "Piece.h"
 #include "Cell.h"
 #include "Move.h"
 #include "EPieceTypes.h"
 
-void mBuildPiece(Piece* this, EColors pColor, EPieceTypes pPieceType, Cell* pCell) 
+Piece* NewPiece(Player* pOwner, Cell* pCell, SPieceTypes::EPieceTypes pPieceType)
 {
-  this->aCell = pCell;
-  this->aCell->mPiece(this);
-  this->aColor = pColor;
+  Piece* vThis = (Piece*)malloc(sizeof(Piece));
   this->aPieceType = pPieceType;
-  switch (this->aPieceType) {
-    case EPieceTypes::King:
+  switch (this->aPieceType)
+  {
+    case SPieceTypes::EPieceTypes::King:
       {
-        if (this->aColor == EColors::White) {
-          this->aSymbol = (char*)"♚";
-        } else {
-          this->aSymbol = (char*)"♔";
+        if (this->aColor == SColors::EColors::White) 
+        {
+          this->aSymbol = '♔';
+          this->aLetter = 'K';
+        } 
+        else 
+        {
+          this->aSymbol = '♚';
+          this->aLetter = 'k';
         }
       }
       break;
-    case EPieceTypes::Queen:
+    case SPieceTypes::EPieceTypes::Queen:
       {
-        if (this->aColor == EColors::White) {
-          this->aSymbol = (char*)"♛";
-        } else {
-          this->aSymbol = (char*)"♕";
+        if (this->aColor == SColors::EColors::White) 
+        {
+          this->aSymbol = '♕';
+          this->aLetter = 'Q';
+        } 
+        else 
+        {
+          this->aSymbol = '♛';
+          this->aLetter = 'q';
         }
       }
       break;
-    case EPieceTypes::Bishop:
+    case SPieceTypes::EPieceTypes::Bishop:
       {
-        if (this->aColor == EColors::White) {
-          this->aSymbol = (char*)"♝";
-        } else {
-          this->aSymbol = (char*)"♗";
+        if (this->aColor == SColors::EColors::White) 
+        {
+          this->aSymbol = '♗';
+          this->aLetter = 'B';
+        } 
+        else 
+        {
+          this->aSymbol = '♝';
+          this->aLetter = 'b';
         }
       }
       break;
-    case EPieceTypes::Knight:
+    case SPieceTypes::EPieceTypes::Knight:
       {
-        if (this->aColor == EColors::White) {
-          this->aSymbol = (char*)"♞";
-        } else {
-          this->aSymbol = (char*)"♘";
+        if (this->aColor == SColors::EColors::White) 
+        {
+          this->aSymbol = '♘';
+          this->aLetter = 'N';
+        }
+        else 
+        {
+          this->aSymbol = '♞';
+          this->aLetter = 'N';
         }
       }
       break;
-    case EPieceTypes::Rook:
+    case SPieceTypes::EPieceTypes::Rook:
       {
-        if (this->aColor == EColors::White) {
-          this->aSymbol = (char*)"♜";
-        } else {
-          this->aSymbol = (char*)"♖";
+        if (this->aColor == SColors::EColors::White) 
+        {
+          this->aSymbol = '♖';
+          this->aLetter = 'R';
+        }
+        else
+        {
+          this->aSymbol = '♜';
+          this->aLetter = 'r';
         }
       }
       break;
-    case EPieceTypes::Pawn:
+    case SPieceTypes::EPieceTypes::Pawn:
       {
-        if (this->aColor == EColors::White) {
-          this->aSymbol = (char*)"♟";
-        } else {
-          this->aSymbol = (char*)"♙";
+        if (this->aColor == SColors::EColors::White) 
+        {
+          this->aSymbol = '♙';
+          this->aLetter = 'P';
+        }
+        else 
+        {
+          this->aSymbol = '♟';
+          this->aLetter = 'p';
         }
       }
       break;
   };
-  this->aMoved = false;
-  //this->aAvailableMoves = new List<Move>();
+  vThis->aSymbol = "";
+  vThis->aPieceType = SPieceTypes::EPieceTypes::None;
+  vThis->aOwner = pOwner;
+  vThis->aColor = vThis->aOwner->aColor;
+  vThis->aMoved = false;
+  vThis->aJailed = false;
+  vThis->aCell = pCell;
+  vThis->aCell->aPiece = vThis;
+  return vThis;
 }
 
-void mPrintPiece(Piece* this)
+void FreePiece(Piece* pThis)
 {
-    Serial.print(this->aSymbol);
-} */
+  if(pThis->aCell != NULL)
+  {
+    pThis->aCell->Piece = NULL;
+    pThis->aCell = NULL
+  }
+  free(pThis);
+}
+
+void mPrintPiece(Piece* pThis)
+{
+    Serial.print(pThis->aSymbol);
+}

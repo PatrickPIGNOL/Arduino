@@ -1,10 +1,11 @@
 #ifndef EColors_H
 #define EColors_H
-
-typedef enum 
+namespace SColors
 {
-    White,
-    Black
-}EColors;
-
+    typedef enum 
+    {
+        White,
+        Black
+    }EColors;
+}
 #endif

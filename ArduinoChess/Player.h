@@ -3,16 +3,22 @@
 
 #include "EColors.h"
 #include "EPlayerType.h"
+#include "Board.h"
 #include <Arduino.h>
-#include "Piece.h"
-typedef struct
+
+typedef struct Piece Piece;
+
+typedef struct Player
 {
-    EPlayerType aPlayerType;
-    EColors aColor;
+    SPlayerType::EPlayerType aPlayerType;
+    SColors::EColors aColor;
     Piece** aPieces;
     int aPiecesCount;
-    Piece** aJail;
     int aJailCount;
 }Player;
+
+Player* NewPlayer(Board* pBoard, SColors::EColors pColor, SPlayerType::EPlayerType pPlayerType);
+void FreePlayer(Player* pThis);
+
 
 #endif

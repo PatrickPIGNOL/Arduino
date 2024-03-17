@@ -1,10 +1,11 @@
 #ifndef EPlayerType_H
 #define EPlayerType_H
-
-typedef enum
+namespace SPlayerType
 {
-    Human,
-    Computer
-}EPlayerType;
-
+    typedef enum
+    {
+        Human,
+        Computer
+    }EPlayerType;
+}
 #endif

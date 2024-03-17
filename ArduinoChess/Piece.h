@@ -9,17 +9,23 @@
 #include <Arduino.h>
 #include "EColors.h"
 #include "EPieceTypes.h"
+#include "Cell.h"
+#include "Player.h"
 
-struct _Cell;
-typedef struct Piece
+typedef struct 
 {
     char aSymbol;
-    EPieceTypes aPieceType;
-    EColors aColor;
+    char aLetter;
+    SPieceTypes::EPieceTypes aPieceType;
+    SColors::EColors aColor;
     bool aMoved;
-    bool aLastMoved;
     bool aJailed;
-    struct _Cell* aMovedFrom;
+    Cell* aCell;
+    Player* aOwner;
 }Piece;
+
+Piece* NewPiece(Cell* pCell);
+void FreePiece(Piece* pThis);
+void mPrintPiece(Piece* pThis);
 
 #endif

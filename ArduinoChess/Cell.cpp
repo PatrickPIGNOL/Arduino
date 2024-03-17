@@ -1,41 +1,48 @@
-/* #include "Cell.h"
+#include "Cell.h"
 #include "Piece.h"
 
-void mBuildCell(Cell* this, int pX, int pY)
+Cell* NewCell(int pX, int pY)
 {
-    this->aPiece = NULL;
-    this->aX = pX;
-    this->aY = pY;
-    if((this->aX + this->aY) % 2 == 0)
+    Cell* vThis = (Cell*)malloc(sizeof(Cell));
+    vThis->aX = pX;
+    vThis->aY = pY;
+    if((vThis->aX + vThis->aY) % 2 == 0)
     {
-        this->aColor = EColors::White;
+        vThis->aColor = SColors::EColors::White;
     }
     else
     {
-        this->aColor = EColors::Black;      
+        vThis->aColor = SColors::EColors::Black;      
     }
-    this->aLetter = 'a' + this->aX;
-    this->aDigit = '8' - this->aY;
+    vThis->aLetter = 'a' + vThis->aX;
+    vThis->aDigit = '8' - vThis->aY;
+    vThis->aPiece = NULL;
+    return vThis;
 }
 
-void mPrintCell(Cell* this)
+void FreeCell(Cell* pThis)
 {
-    if(this->aPiece != NULL)
+  free(pThis);
+}
+
+void mPrintCell(Cell* pThis)
+{
+  if(pThis->aPiece != NULL)
+  {
+    (pThis->aPiece);
+  }
+  else
+  {
+    switch(pThis->aColor)
     {
-        mPrintPiece(this->aPiece);
-    }
-    else
-    {
-        switch(this->aColor)
-        {
-            case EColors::White:
-            {
-                Serial.print("░");
-            }break;
-            default:
-            {                
-                Serial.print("▓");
-            }break;
-        };
-    }
-} */
+      case SColors::EColors::White:
+      {
+          Serial.print("░");
+      }break;
+      default:
+      {                
+          Serial.print("▓");
+      }break;
+    };
+  }
+}

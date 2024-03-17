@@ -7,12 +7,17 @@
 
 typedef struct
 {
-    Board* aBoard;
-    EStates aState;
-    char aIncomingByte;
-    EGameModes aGameMode;
-    int aDifficulty;
-    int aDepht;
+  Board* aBoard;
+  SStates::EStates aState;
+  char aIncomingByte;
+  SGameModes::EGameModes aGameMode;
+  int aDifficulty;
+  int aDepht;
 }Game;
+
+Game* NewGame();
+void FreeGame(Game* pThis);
+void mGameUpdate(Game* pGame);
+void mGameRender(Game* pGame);
 
 #endif

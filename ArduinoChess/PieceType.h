@@ -1,14 +1,15 @@
-#ifndef PIECETYPE_H
-#define PIECETYPE_H
-
-typedef enum
+#ifndef EPIECETYPE_H
+#define EPIECETYPE_H
+namespace SPieceType
 {
-    Pawn,
-    Rook,
-    Horse,
-    Bishop,
-    Queen,
-    King
-}PieceType;
-
+  typedef enum
+  {
+      Pawn,
+      Rook,
+      Horse,
+      Bishop,
+      Queen,
+      King
+  }EPieceType;
+}
 #endif

@@ -3,15 +3,21 @@
 
 #include "EColors.h"
 #include <Arduino.h>
-#include "Piece.h"
-typedef struct _Cell
+
+typedef struct Piece Piece;
+
+typedef struct
 {
     int aX;
     int aY;
     char aLetter;
     char aDigit;
-    EColors aColor;
+    SColors::EColors aColor;
     Piece* aPiece;
 }Cell;
+
+Cell* NewCell(int pX, int pY);
+void FreeCell(Cell* vThis);
+void mPrintCell(Cell* vThis);
 
 #endif

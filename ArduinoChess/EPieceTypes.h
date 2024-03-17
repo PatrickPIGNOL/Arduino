@@ -1,14 +1,16 @@
 #ifndef EPieceTypes_H
 #define EPieceTypes_H
-
-typedef enum
+namespace SPieceTypes
 {
-    King = 6000,
-    Queen = 90,
-    Bishop = 30,
-    Knight = 31,
-    Rook = 50,
-    Pawn = 10
-}EPieceTypes;
-
+  typedef enum
+  {
+      None = 0,
+      King = 6000,
+      Queen = 90,
+      Bishop = 30,
+      Knight = 31,
+      Rook = 50,
+      Pawn = 10
+  }EPieceTypes;
+}
 #endif
