@@ -1,6 +1,5 @@
 #include "OneWire.h"
 #include "DallasTemperature.h"
-#include "RelaysBoard.h"
 
 #define PumpPIN 22
 #define FanPIN 23
@@ -35,44 +34,42 @@ bool vIsHeating = false;
 
 typedef enum
 {
-  FermentationPrimaire,
-  FermentationSecondaire,
-  EndOfFermentation
+    FermentationPrimaire,
+    FermentationSecondaire,
+    EndOfFermentation
 } EStatus;
 
 OneWire vOneWire1(TemperaturePIN1);
 OneWire vOneWire2(TemperaturePIN2);
 DallasTemperature vDT1(&vOneWire1);
 DallasTemperature vDT2(&vOneWire2);
-RelaysBoard RelaysBoard(22);
 EStatus vStatus = EStatus::FermentationPrimaire;
 int vTemperatureStatus = FermentationPrimaireAverage;
 long vCounter = 0;
 void setup()
 {
-  Serial.begin(9600);  // définition de l'ouverture du port série
-  vDT1.begin();          // sonde activée
-  vDT2.begin();          // sonde activée
-  pinMode(PumpPIN, OUTPUT);
-  pinMode(HeatPIN, OUTPUT);
-  pinMode(ClimPIN, OUTPUT);
-  pinMode(FanPIN, OUTPUT);
-  pinMode(ControlPIN, OUTPUT);
-  pinMode(HeatPIN, OUTPUT);
-  pinMode(CoolPIN, OUTPUT);
-  pinMode(PrimairePIN, OUTPUT);
-  pinMode(SecondairePIN, OUTPUT);
-  pinMode(FinishPIN, OUTPUT);
-  digitalWrite(PrimairePIN, ON);
-  digitalWrite(SecondairePIN, OFF);
-  digitalWrite(FinishPIN, OFF);
-  digitalWrite(HeatPIN, ON);
-  digitalWrite(ControlPIN, ON);
-  digitalWrite(HeatPIN, OFF);
-  digitalWrite(ClimPIN, OFF);
-  digitalWrite(PumpPIN, ON);
-  digitalWrite(FanPIN, ON);
-
+    Serial.begin(9600);  // définition de l'ouverture du port série
+    vDT1.begin();          // sonde activée
+    vDT2.begin();          // sonde activée
+    pinMode(PumpPIN, OUTPUT);
+    pinMode(HeatPIN, OUTPUT);
+    pinMode(ClimPIN, OUTPUT);
+    pinMode(FanPIN, OUTPUT);
+    pinMode(ControlPIN, OUTPUT);
+    pinMode(HeatPIN, OUTPUT);
+    pinMode(CoolPIN, OUTPUT);
+    pinMode(PrimairePIN, OUTPUT);
+    pinMode(SecondairePIN, OUTPUT);
+    pinMode(FinishPIN, OUTPUT);
+    digitalWrite(PrimairePIN, ON);
+    digitalWrite(SecondairePIN, OFF);
+    digitalWrite(FinishPIN, OFF);
+    digitalWrite(HeatPIN, ON);
+    digitalWrite(ControlPIN, ON);
+    digitalWrite(HeatPIN, OFF);
+    digitalWrite(ClimPIN, OFF);
+    digitalWrite(PumpPIN, ON);
+    digitalWrite(FanPIN, ON);
 }
 
 long mMillisecondToDays(long pCounter)
@@ -103,253 +100,102 @@ void mSetHeating(bool pHeating)
 
 void loop()
 {
-  vCounter += 500;
-  if (vFermentationSecondaire)
-  {
-    if ((vStatus != EStatus::FermentationSecondaire && vStatus != EStatus::EndOfFermentation) && mMillisecondToDays(vCounter) < JoursFermentationPrimaire)
+    vCounter += 500;
+    if (vFermentationSecondaire)
     {
-      vStatus = EStatus::FermentationPrimaire;
-      digitalWrite(PrimairePIN, ON);
-    }
-    else if ((vStatus != EStatus::FermentationSecondaire && vStatus != EStatus::EndOfFermentation) && mMillisecondToDays(vCounter) > JoursFermentationPrimaire)
-    {
-      vStatus = EStatus::FermentationSecondaire;
-      digitalWrite(PrimairePIN, OFF);
-      digitalWrite(SecondairePIN, ON);
-    }
-    else if ((vStatus != EStatus::EndOfFermentation) && mMillisecondToDays(vCounter) > JoursFermentationPrimaire + JoursFermentationSecondaire)
-    {
-      vStatus = EStatus::EndOfFermentation;
-      digitalWrite(PrimairePIN, OFF);
-      digitalWrite(SecondairePIN, OFF);
-      digitalWrite(FinishPIN, ON);
-    }
-  }
-  else
-  {
-    if
-    (
-      vStatus != EStatus::EndOfFermentation
-      &&
-      mMillisecondToDays(vCounter) < JoursFermentationPrimaire
-    )
-    {
-      vStatus = EStatus::FermentationPrimaire;
-    }
-    else if (vStatus != EStatus::EndOfFermentation && mMillisecondToDays(vCounter) > JoursFermentationPrimaire)
-    {
-      vStatus = EStatus::EndOfFermentation;
-    }
-    else if (vStatus == EStatus::EndOfFermentation)
-    {
-      vStatus = vStatus = EStatus::EndOfFermentation;
-    }
-  }
-
-  vDT1.requestTemperatures();
-  int vTemperature1 = vDT1.getTempCByIndex(0);
-  vDT2.requestTemperatures();
-  int vTemperature2 = vDT2.getTempCByIndex(0);
-
-
-  Serial.print("Clim Temp: ");
-  Serial.print(vTemperature1);
-  Serial.println( "°C");
-  Serial.print("Beer Temp: ");
-  Serial.print(vTemperature2);
-  Serial.println( "°C");
-
-
-
-  switch (vStatus)
-  {
-    case EStatus::FermentationPrimaire:
-      {
-        if (vTemperature2 >= FermentationPrimaireTooHot)
+        if ((vStatus != EStatus::FermentationSecondaire && vStatus != EStatus::EndOfFermentation) && mMillisecondToDays(vCounter) < JoursFermentationPrimaire)
         {
-          vTemperatureStatus = FermentationPrimaireTooHot;
+            vStatus = EStatus::FermentationPrimaire;
+            digitalWrite(PrimairePIN, ON);
         }
-        else if (vTemperature2 <= FermentationPrimaireTooCold)
+        else if ((vStatus != EStatus::EndOfFermentation) && mMillisecondToDays(vCounter) > JoursFermentationPrimaire + JoursFermentationSecondaire)
         {
-          vTemperatureStatus = FermentationPrimaireTooCold;
+            vStatus = EStatus::EndOfFermentation;
+            digitalWrite(PrimairePIN, OFF);
+            digitalWrite(SecondairePIN, OFF);
+            digitalWrite(FinishPIN, ON);
         }
-        else if
+    }
+    else
+    {
+        if
         (
-          vTemperature2 >= FermentationPrimaireAverage - FermentationPrimaireTolerance
-          &&
-          vTemperature2 <= FermentationPrimaireAverage + FermentationPrimaireTolerance
+            vStatus != EStatus::EndOfFermentation
+            &&
+            mMillisecondToDays(vCounter) < JoursFermentationPrimaire
         )
         {
-          vTemperatureStatus = FermentationPrimaireAverage;
+            vStatus = EStatus::FermentationPrimaire;
         }
-        switch (vTemperatureStatus)
+        else if (vStatus != EStatus::EndOfFermentation && mMillisecondToDays(vCounter) > JoursFermentationPrimaire)
         {
-          case FermentationPrimaireTooCold :
-            {
-              mSetHeating(true);
-              if (vTemperature1 >= FermentationPrimaireTooHot)
-              {
-                digitalWrite(ClimPIN, OFF);
-              }
-              else if (vTemperature1 < FermentationPrimaireAverage)
-              {
-                digitalWrite(ClimPIN, ON);
-              }
-            } break;
-          case FermentationPrimaireTooHot :
-            {
-              mSetHeating(false);
-              if (vTemperature1 <= FermentationPrimaireTooCold)
-              {
-                digitalWrite(ClimPIN, OFF);
-              }
-              else if (vTemperature1 > FermentationPrimaireAverage)
-              {
-                digitalWrite(ClimPIN, ON);
-              }
-            } break;
-          case FermentationPrimaireAverage :
-          default:
-            {
-              if (vTemperature1 < FermentationPrimaireAverage - FermentationPrimaireTolerance)
-              {
-                mSetHeating(true);
-                digitalWrite(ClimPIN, ON);
-              }
-              else if (vTemperature1 > FermentationPrimaireAverage + FermentationPrimaireTolerance)
-              {
-                mSetHeating(false);
-                digitalWrite(ClimPIN, ON);
-              }
-              else
-              {
-                digitalWrite(ClimPIN, OFF);
-              }
-            } break;
+            vStatus = EStatus::EndOfFermentation;
         }
-      } break;
-    case EStatus::FermentationSecondaire:
-    case EStatus::EndOfFermentation:
-      {
-        if (vFermentationSecondaire)
+        else if (vStatus == EStatus::EndOfFermentation)
         {
-          if (vTemperature2 >= FermentationSecondaireTooHot)
-          {
-            vTemperatureStatus = FermentationSecondaireTooHot;
-          }
-          else if (vTemperature2 <= FermentationSecondaireTooCold)
-          {
-            vTemperatureStatus = FermentationSecondaireTooCold;
-          }
-          else if
-          (
-            vTemperature2 >= FermentationSecondaireAverage - FermentationSecondaireTolerance
-            &&
-            vTemperature2 <= FermentationSecondaireAverage + FermentationSecondaireTolerance
-          )
-          {
-            vTemperatureStatus = FermentationSecondaireAverage;
-          }
-          switch (vTemperatureStatus)
-          {
-            case FermentationSecondaireTooCold :
-              {
-                mSetHeating(true);
-                if (vTemperature1 >= FermentationSecondaireTooHot)
-                {
-                  digitalWrite(ClimPIN, OFF);
-                }
-                else if (vTemperature1 < FermentationSecondaireAverage)
-                {
-                  digitalWrite(ClimPIN, ON);
-                }
-              } break;
-            case FermentationSecondaireTooHot :
-              {
-                mSetHeating(OFF);
-                if (vTemperature1 <= FermentationSecondaireTooCold)
-                {
-                  digitalWrite(ClimPIN, OFF);
-                }
-                else if (vTemperature1 > FermentationSecondaireAverage)
-                {
-                  digitalWrite(ClimPIN, ON);
-                }
-              } break;
-            case FermentationSecondaireAverage :
-            default:
-              {
-                digitalWrite(ClimPIN, ON);
-                if (vTemperature1 < FermentationSecondaireAverage - FermentationSecondaireTolerance)
-                {
-                  mSetHeating(true);
-                }
-                else if (vTemperature1 > FermentationSecondaireAverage + FermentationSecondaireTolerance)
-                {
-                  mSetHeating(false);
-                }
-              } break;
-          }
+            vStatus = vStatus = EStatus::EndOfFermentation;
+        }
+    }
 
-          if (vTemperature2 >= FermentationSecondaireTooHot)
-          {
-            vTemperatureStatus = FermentationSecondaireTooHot;
-          }
-          else if (vTemperature2 <= FermentationSecondaireTooCold)
-          {
-            vTemperatureStatus = FermentationSecondaireTooCold;
-          }
-          else if
-          (
-            vTemperature2 >= FermentationSecondaireAverage - FermentationSecondaireTolerance
-            &&
-            vTemperature2 <= FermentationSecondaireAverage + FermentationSecondaireTolerance
-          )
-          {
-            vTemperatureStatus = FermentationSecondaireAverage;
-          }
-          switch (vTemperatureStatus)
-          {
-            case FermentationSecondaireTooCold :
-              {
-                mSetHeating(true);
-                if (vTemperature1 >= FermentationSecondaireTooHot)
-                {
-                  digitalWrite(ClimPIN, OFF);
-                }
-                else if (vTemperature1 < FermentationSecondaireAverage)
-                {
-                  digitalWrite(ClimPIN, ON);
-                }
-              } break;
-            case FermentationSecondaireTooHot :
-              {
-                mSetHeating(false);
-                if (vTemperature1 <= FermentationSecondaireTooCold)
-                {
-                  digitalWrite(ClimPIN, OFF);
-                }
-                else if (vTemperature1 > FermentationSecondaireAverage)
-                {
-                  digitalWrite(ClimPIN, ON);
-                }
-              } break;
-            case FermentationSecondaireAverage :
-            default:
-              {
-                digitalWrite(ClimPIN, ON);
-                if (vTemperature1 < FermentationSecondaireAverage - FermentationSecondaireTolerance)
-                {
-                  mSetHeating(true);
-                }
-                else if (vTemperature1 > FermentationSecondaireAverage + FermentationSecondaireTolerance)
-                {
-                  mSetHeating(false);
-                }
-              } break;
-          }
+    vDT1.requestTemperatures();
+    int vTemperature1 = vDT1.getTempCByIndex(0);
+    vDT2.requestTemperatures();
+    int vTemperature2 = vDT2.getTempCByIndex(0);
+
+    Serial.print("Clim Temp: ");
+    Serial.print(vTemperature1);
+    Serial.println( "°C");
+    Serial.print("Beer Temp: ");
+    Serial.print(vTemperature2);
+    Serial.println( "°C");
+
+    if (vTemperature2 >= FermentationPrimaireTooHot)
+    {
+        vTemperatureStatus = FermentationPrimaireTooHot;
+    }
+    else if (vTemperature2 <= FermentationPrimaireTooCold)
+    {
+        vTemperatureStatus = FermentationPrimaireTooCold;
+    }
+    else if
+    (
+        vTemperature2 >= FermentationPrimaireAverage - FermentationPrimaireTolerance
+        &&
+        vTemperature2 <= FermentationPrimaireAverage + FermentationPrimaireTolerance
+    )
+    {
+        vTemperatureStatus = FermentationPrimaireAverage;
+    }
+    switch (vTemperatureStatus)
+    {
+        case FermentationPrimaireTooCold :
+        {
+            mSetHeating(true);
+            digitalWrite(ClimPIN, ON);
         } break;
-      }
-  }
-  delay(500);
+        case FermentationPrimaireTooHot :
+        {
+            mSetHeating(false);
+            digitalWrite(ClimPIN, ON);
+        } break;
+        case FermentationPrimaireAverage :
+        default:
+        {
+            if (vTemperature1 < FermentationPrimaireAverage)
+            {
+                mSetHeating(true);
+                digitalWrite(ClimPIN, ON);
+            }
+            else if (vTemperature1 > FermentationPrimaireAverage)
+            {
+                mSetHeating(false);
+                digitalWrite(ClimPIN, ON);
+            }
+            else if(vTemperature1 == FermentationPrimaireAverage)
+            {
+                digitalWrite(ClimPIN, OFF);
+            }
+        } break;
+    }
+    delay(500);
 }
