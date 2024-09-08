@@ -4,17 +4,34 @@
 
 #define PumpPIN 22
 #define FanPIN 23
-#define HeatPIN 24
-#define ClimPIN 25
-#define PrimairePIN 27
-#define SecondairePIN 29
-#define FinishPIN 29
+#define ClimPIN 24
+#define ControlPIN 25
+#define HeatPIN 26
+#define CoolPIN 27
+#define PrimairePIN 37
+#define SecondairePIN 36
+#define FinishPIN 35
 #define TemperaturePIN1 52
 #define TemperaturePIN2 53
 #define JoursFermentationPrimaire 15
-#define JoursFermentationSecondaire 15
+#define JoursFermentationSecondaire 1
+
+#define ON LOW
+#define OFF HIGH
+
+const int FermentationPrimaireTooHot = 20;
+const int FermentationPrimaireTooCold = 17;
+const int FermentationPrimaireAverage = 18;
+const int FermentationPrimaireTolerance = 1;
+
+const int FermentationSecondaireTooHot = 20;
+const int FermentationSecondaireTooCold = 17;
+const int FermentationSecondaireAverage = 18;
+const int FermentationSecondaireTolerance = 1;
 
 bool vFermentationSecondaire = false;
+
+bool vIsHeating = false;
 
 typedef enum
 {
@@ -23,29 +40,13 @@ typedef enum
   EndOfFermentation
 } EStatus;
 
-typedef enum
-{
-  PrimaireTooHot = 33,
-  PrimaireTooCold = 28,
-  PrimaireAverage = 30,
-  PrimaireTolerance = 6
-} EFermentationPrimaire;
-
-typedef enum
-{
-  SecondaireTooHot = 22,
-  SecondaireTooCold = 18,
-  SecondaireAverage = 20,
-  SecondaireTolerance = 1
-} EFermentationSecondaire;
-
 OneWire vOneWire1(TemperaturePIN1);
 OneWire vOneWire2(TemperaturePIN2);
 DallasTemperature vDT1(&vOneWire1);
 DallasTemperature vDT2(&vOneWire2);
 RelaysBoard RelaysBoard(22);
 EStatus vStatus = EStatus::FermentationPrimaire;
-int vTemperatureStatus = EFermentationPrimaire::PrimaireAverage;
+int vTemperatureStatus = FermentationPrimaireAverage;
 long vCounter = 0;
 void setup()
 {
@@ -56,16 +57,22 @@ void setup()
   pinMode(HeatPIN, OUTPUT);
   pinMode(ClimPIN, OUTPUT);
   pinMode(FanPIN, OUTPUT);
+  pinMode(ControlPIN, OUTPUT);
+  pinMode(HeatPIN, OUTPUT);
+  pinMode(CoolPIN, OUTPUT);
   pinMode(PrimairePIN, OUTPUT);
   pinMode(SecondairePIN, OUTPUT);
   pinMode(FinishPIN, OUTPUT);
-  digitalWrite(PrimairePIN, HIGH);
-  digitalWrite(SecondairePIN, LOW);
-  digitalWrite(FinishPIN, LOW);
-  digitalWrite(HeatPIN, LOW);
-  digitalWrite(ClimPIN, LOW);
-  digitalWrite(PumpPIN, HIGH);
-  digitalWrite(FanPIN, HIGH);
+  digitalWrite(PrimairePIN, ON);
+  digitalWrite(SecondairePIN, OFF);
+  digitalWrite(FinishPIN, OFF);
+  digitalWrite(HeatPIN, ON);
+  digitalWrite(ControlPIN, ON);
+  digitalWrite(HeatPIN, OFF);
+  digitalWrite(ClimPIN, OFF);
+  digitalWrite(PumpPIN, ON);
+  digitalWrite(FanPIN, ON);
+
 }
 
 long mMillisecondToDays(long pCounter)
@@ -73,30 +80,49 @@ long mMillisecondToDays(long pCounter)
   return pCounter / 86400000; // (24 * 3600 * 1000)
 }
 
+void mSetHeating(bool pHeating)
+{
+    if((pHeating && !vIsHeating) || (!pHeating && vIsHeating))
+    {  
+        digitalWrite(ControlPIN, OFF);
+        delay(5);
+        if(pHeating && !vIsHeating)
+        {
+            digitalWrite(HeatPIN, ON);
+            digitalWrite(CoolPIN, OFF);
+        }
+        else
+        {
+            digitalWrite(HeatPIN, OFF);
+            digitalWrite(CoolPIN, ON);
+        }
+        delay(5);
+        digitalWrite(ControlPIN, ON);
+    }
+}
+
 void loop()
 {
   vCounter += 500;
-
   if (vFermentationSecondaire)
   {
     if ((vStatus != EStatus::FermentationSecondaire && vStatus != EStatus::EndOfFermentation) && mMillisecondToDays(vCounter) < JoursFermentationPrimaire)
     {
       vStatus = EStatus::FermentationPrimaire;
-      digitalWrite(PrimairePIN, HIGH);
+      digitalWrite(PrimairePIN, ON);
     }
     else if ((vStatus != EStatus::FermentationSecondaire && vStatus != EStatus::EndOfFermentation) && mMillisecondToDays(vCounter) > JoursFermentationPrimaire)
     {
       vStatus = EStatus::FermentationSecondaire;
-      digitalWrite(PrimairePIN, LOW);
-      digitalWrite(SecondairePIN, HIGH);
+      digitalWrite(PrimairePIN, OFF);
+      digitalWrite(SecondairePIN, ON);
     }
     else if ((vStatus != EStatus::EndOfFermentation) && mMillisecondToDays(vCounter) > JoursFermentationPrimaire + JoursFermentationSecondaire)
     {
       vStatus = EStatus::EndOfFermentation;
-
-      digitalWrite(PrimairePIN, LOW);
-      digitalWrite(SecondairePIN, LOW);
-      digitalWrite(FinishPIN, HIGH);
+      digitalWrite(PrimairePIN, OFF);
+      digitalWrite(SecondairePIN, OFF);
+      digitalWrite(FinishPIN, ON);
     }
   }
   else
@@ -139,65 +165,65 @@ void loop()
   {
     case EStatus::FermentationPrimaire:
       {
-        if (vTemperature2 >= EFermentationPrimaire::PrimaireTooHot)
+        if (vTemperature2 >= FermentationPrimaireTooHot)
         {
-          vTemperatureStatus = EFermentationPrimaire::PrimaireTooHot;
+          vTemperatureStatus = FermentationPrimaireTooHot;
         }
-        else if (vTemperature2 <= EFermentationPrimaire::PrimaireTooCold)
+        else if (vTemperature2 <= FermentationPrimaireTooCold)
         {
-          vTemperatureStatus = EFermentationPrimaire::PrimaireTooCold;
+          vTemperatureStatus = FermentationPrimaireTooCold;
         }
         else if
         (
-          vTemperature2 >= EFermentationPrimaire::PrimaireAverage - EFermentationPrimaire::PrimaireTolerance
+          vTemperature2 >= FermentationPrimaireAverage - FermentationPrimaireTolerance
           &&
-          vTemperature2 <= EFermentationPrimaire::PrimaireAverage + EFermentationPrimaire::PrimaireTolerance
+          vTemperature2 <= FermentationPrimaireAverage + FermentationPrimaireTolerance
         )
         {
-          vTemperatureStatus = EFermentationPrimaire::PrimaireAverage;
+          vTemperatureStatus = FermentationPrimaireAverage;
         }
         switch (vTemperatureStatus)
         {
-          case EFermentationPrimaire::PrimaireTooCold :
+          case FermentationPrimaireTooCold :
             {
-              digitalWrite(HeatPIN, HIGH);
-              if (vTemperature1 >= EFermentationPrimaire::PrimaireTooHot)
+              mSetHeating(true);
+              if (vTemperature1 >= FermentationPrimaireTooHot)
               {
-                digitalWrite(ClimPIN, LOW);
+                digitalWrite(ClimPIN, OFF);
               }
-              else if (vTemperature1 < EFermentationPrimaire::PrimaireAverage)
+              else if (vTemperature1 < FermentationPrimaireAverage)
               {
-                digitalWrite(ClimPIN, HIGH);
+                digitalWrite(ClimPIN, ON);
               }
             } break;
-          case EFermentationPrimaire::PrimaireTooHot :
+          case FermentationPrimaireTooHot :
             {
-              digitalWrite(HeatPIN, LOW);
-              if (vTemperature1 <= EFermentationPrimaire::PrimaireTooCold)
+              mSetHeating(false);
+              if (vTemperature1 <= FermentationPrimaireTooCold)
               {
-                digitalWrite(ClimPIN, LOW);
+                digitalWrite(ClimPIN, OFF);
               }
-              else if (vTemperature1 > EFermentationPrimaire::PrimaireAverage)
+              else if (vTemperature1 > FermentationPrimaireAverage)
               {
-                digitalWrite(ClimPIN, HIGH);
+                digitalWrite(ClimPIN, ON);
               }
             } break;
-          case EFermentationPrimaire::PrimaireAverage :
+          case FermentationPrimaireAverage :
           default:
             {
-              if (vTemperature1 < EFermentationPrimaire::PrimaireAverage - EFermentationPrimaire::PrimaireTolerance)
+              if (vTemperature1 < FermentationPrimaireAverage - FermentationPrimaireTolerance)
               {
-                digitalWrite(HeatPIN, HIGH);
-                digitalWrite(ClimPIN, HIGH);
+                mSetHeating(true);
+                digitalWrite(ClimPIN, ON);
               }
-              else if (vTemperature1 > EFermentationPrimaire::PrimaireAverage + EFermentationPrimaire::PrimaireTolerance)
+              else if (vTemperature1 > FermentationPrimaireAverage + FermentationPrimaireTolerance)
               {
-                digitalWrite(HeatPIN, LOW);
-                digitalWrite(ClimPIN, HIGH);
+                mSetHeating(false);
+                digitalWrite(ClimPIN, ON);
               }
               else
               {
-                digitalWrite(ClimPIN, LOW);
+                digitalWrite(ClimPIN, OFF);
               }
             } break;
         }
@@ -207,118 +233,118 @@ void loop()
       {
         if (vFermentationSecondaire)
         {
-          if (vTemperature2 >= EFermentationSecondaire::SecondaireTooHot)
+          if (vTemperature2 >= FermentationSecondaireTooHot)
           {
-            vTemperatureStatus = EFermentationSecondaire::SecondaireTooHot;
+            vTemperatureStatus = FermentationSecondaireTooHot;
           }
-          else if (vTemperature2 <= EFermentationSecondaire::SecondaireTooCold)
+          else if (vTemperature2 <= FermentationSecondaireTooCold)
           {
-            vTemperatureStatus = EFermentationSecondaire::SecondaireTooCold;
+            vTemperatureStatus = FermentationSecondaireTooCold;
           }
           else if
           (
-            vTemperature2 >= EFermentationSecondaire::SecondaireAverage - EFermentationSecondaire::SecondaireTolerance
+            vTemperature2 >= FermentationSecondaireAverage - FermentationSecondaireTolerance
             &&
-            vTemperature2 <= EFermentationSecondaire::SecondaireAverage + EFermentationSecondaire::SecondaireTolerance
+            vTemperature2 <= FermentationSecondaireAverage + FermentationSecondaireTolerance
           )
           {
-            vTemperatureStatus = EFermentationSecondaire::SecondaireAverage;
+            vTemperatureStatus = FermentationSecondaireAverage;
           }
           switch (vTemperatureStatus)
           {
-            case EFermentationSecondaire::SecondaireTooCold :
+            case FermentationSecondaireTooCold :
               {
-                digitalWrite(HeatPIN, HIGH);
-                if (vTemperature1 >= EFermentationSecondaire::SecondaireTooHot)
+                mSetHeating(true);
+                if (vTemperature1 >= FermentationSecondaireTooHot)
                 {
-                  digitalWrite(ClimPIN, LOW);
+                  digitalWrite(ClimPIN, OFF);
                 }
-                else if (vTemperature1 < EFermentationSecondaire::SecondaireAverage)
+                else if (vTemperature1 < FermentationSecondaireAverage)
                 {
-                  digitalWrite(ClimPIN, HIGH);
+                  digitalWrite(ClimPIN, ON);
                 }
               } break;
-            case EFermentationSecondaire::SecondaireTooHot :
+            case FermentationSecondaireTooHot :
               {
-                digitalWrite(HeatPIN, LOW);
-                if (vTemperature1 <= EFermentationSecondaire::SecondaireTooCold)
+                mSetHeating(OFF);
+                if (vTemperature1 <= FermentationSecondaireTooCold)
                 {
-                  digitalWrite(ClimPIN, LOW);
+                  digitalWrite(ClimPIN, OFF);
                 }
-                else if (vTemperature1 > EFermentationSecondaire::SecondaireAverage)
+                else if (vTemperature1 > FermentationSecondaireAverage)
                 {
-                  digitalWrite(ClimPIN, HIGH);
+                  digitalWrite(ClimPIN, ON);
                 }
               } break;
-            case EFermentationSecondaire::SecondaireAverage :
+            case FermentationSecondaireAverage :
             default:
               {
-                digitalWrite(ClimPIN, HIGH);
-                if (vTemperature1 < EFermentationSecondaire::SecondaireAverage - EFermentationSecondaire::SecondaireTolerance)
+                digitalWrite(ClimPIN, ON);
+                if (vTemperature1 < FermentationSecondaireAverage - FermentationSecondaireTolerance)
                 {
-                  digitalWrite(HeatPIN, HIGH);
+                  mSetHeating(true);
                 }
-                else if (vTemperature1 > EFermentationSecondaire::SecondaireAverage + EFermentationSecondaire::SecondaireTolerance)
+                else if (vTemperature1 > FermentationSecondaireAverage + FermentationSecondaireTolerance)
                 {
-                  digitalWrite(HeatPIN, LOW);
+                  mSetHeating(false);
                 }
               } break;
           }
 
-          if (vTemperature2 >= EFermentationSecondaire::SecondaireTooHot)
+          if (vTemperature2 >= FermentationSecondaireTooHot)
           {
-            vTemperatureStatus = EFermentationSecondaire::SecondaireTooHot;
+            vTemperatureStatus = FermentationSecondaireTooHot;
           }
-          else if (vTemperature2 <= EFermentationSecondaire::SecondaireTooCold)
+          else if (vTemperature2 <= FermentationSecondaireTooCold)
           {
-            vTemperatureStatus = EFermentationSecondaire::SecondaireTooCold;
+            vTemperatureStatus = FermentationSecondaireTooCold;
           }
           else if
           (
-            vTemperature2 >= EFermentationSecondaire::SecondaireAverage - EFermentationSecondaire::SecondaireTolerance
+            vTemperature2 >= FermentationSecondaireAverage - FermentationSecondaireTolerance
             &&
-            vTemperature2 <= EFermentationSecondaire::SecondaireAverage + EFermentationSecondaire::SecondaireTolerance
+            vTemperature2 <= FermentationSecondaireAverage + FermentationSecondaireTolerance
           )
           {
-            vTemperatureStatus = EFermentationSecondaire::SecondaireAverage;
+            vTemperatureStatus = FermentationSecondaireAverage;
           }
           switch (vTemperatureStatus)
           {
-            case EFermentationSecondaire::SecondaireTooCold :
+            case FermentationSecondaireTooCold :
               {
-                digitalWrite(HeatPIN, HIGH);
-                if (vTemperature1 >= EFermentationSecondaire::SecondaireTooHot)
+                mSetHeating(true);
+                if (vTemperature1 >= FermentationSecondaireTooHot)
                 {
-                  digitalWrite(ClimPIN, LOW);
+                  digitalWrite(ClimPIN, OFF);
                 }
-                else if (vTemperature1 < EFermentationSecondaire::SecondaireAverage)
+                else if (vTemperature1 < FermentationSecondaireAverage)
                 {
-                  digitalWrite(ClimPIN, HIGH);
+                  digitalWrite(ClimPIN, ON);
                 }
               } break;
-            case EFermentationSecondaire::SecondaireTooHot :
+            case FermentationSecondaireTooHot :
               {
-                digitalWrite(HeatPIN, LOW);
-                if (vTemperature1 <= EFermentationSecondaire::SecondaireTooCold)
+                mSetHeating(false);
+                if (vTemperature1 <= FermentationSecondaireTooCold)
                 {
-                  digitalWrite(ClimPIN, LOW);
+                  digitalWrite(ClimPIN, OFF);
                 }
-                else if (vTemperature1 > EFermentationSecondaire::SecondaireAverage)
+                else if (vTemperature1 > FermentationSecondaireAverage)
                 {
-                  digitalWrite(ClimPIN, HIGH);
+                  digitalWrite(ClimPIN, ON);
                 }
               } break;
-            case EFermentationSecondaire::SecondaireAverage :
+            case FermentationSecondaireAverage :
             default:
               {
-                digitalWrite(ClimPIN, HIGH);
-                if (vTemperature1 < EFermentationSecondaire::SecondaireAverage - EFermentationSecondaire::SecondaireTolerance)
+                digitalWrite(ClimPIN, ON);
+                if (vTemperature1 < FermentationSecondaireAverage - FermentationSecondaireTolerance)
                 {
-                  digitalWrite(HeatPIN, HIGH);
+                  mSetHeating(true);
                 }
-                else if (vTemperature1 > EFermentationSecondaire::SecondaireAverage + EFermentationSecondaire::SecondaireTolerance)
+                else if (vTemperature1 > FermentationSecondaireAverage + FermentationSecondaireTolerance)
                 {
-                  digitalWrite(HeatPIN, LOW);
+                  mSetHeating(false);
                 }
               } break;
           }
