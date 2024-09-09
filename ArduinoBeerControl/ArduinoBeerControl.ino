@@ -1,6 +1,8 @@
 #include "OneWire.h"
 #include "DallasTemperature.h"
 
+
+#define LedPIN 13
 #define PumpPIN 22
 #define FanPIN 23
 #define ClimPIN 24
@@ -51,6 +53,7 @@ void setup()
     Serial.begin(9600);  // définition de l'ouverture du port série
     vDT1.begin();          // sonde activée
     vDT2.begin();          // sonde activée
+    pinmode(LedPIN, OUTPUT);
     pinMode(PumpPIN, OUTPUT);
     pinMode(HeatPIN, OUTPUT);
     pinMode(ClimPIN, OUTPUT);
@@ -101,6 +104,9 @@ void mSetHeating(bool pHeating)
 void loop()
 {
     vCounter += 500;
+
+
+
     if (vFermentationSecondaire)
     {
         if ((vStatus != EStatus::FermentationSecondaire && vStatus != EStatus::EndOfFermentation) && mMillisecondToDays(vCounter) < JoursFermentationPrimaire)
@@ -176,22 +182,22 @@ void loop()
         case FermentationPrimaireTooHot :
         {
             mSetHeating(false);
-            digitalWrite(ClimPIN, ON);
+            digitalWrite(ClimPIN, ON); 
         } break;
         case FermentationPrimaireAverage :
         default:
         {
-            if (vTemperature1 < FermentationPrimaireAverage)
+            if (vTemperature2 < FermentationPrimaireAverage)
             {
                 mSetHeating(true);
                 digitalWrite(ClimPIN, ON);
             }
-            else if (vTemperature1 > FermentationPrimaireAverage)
+            else if (vTemperature2 > FermentationPrimaireAverage)
             {
                 mSetHeating(false);
                 digitalWrite(ClimPIN, ON);
             }
-            else if(vTemperature1 == FermentationPrimaireAverage)
+            else if(vTemperature2 == FermentationPrimaireAverage)
             {
                 digitalWrite(ClimPIN, OFF);
             }
