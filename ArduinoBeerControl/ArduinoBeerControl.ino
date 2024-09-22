@@ -33,6 +33,7 @@ const int FermentationSecondaireTolerance = 1;
 bool vFermentationSecondaire = false;
 
 bool vIsHeating = false;
+bool vControlLed = false;
 
 typedef enum
 {
@@ -53,7 +54,7 @@ void setup()
     Serial.begin(9600);  // définition de l'ouverture du port série
     vDT1.begin();          // sonde activée
     vDT2.begin();          // sonde activée
-    pinmode(LedPIN, OUTPUT);
+    pinMode(LedPIN, OUTPUT);
     pinMode(PumpPIN, OUTPUT);
     pinMode(HeatPIN, OUTPUT);
     pinMode(ClimPIN, OUTPUT);
@@ -105,7 +106,16 @@ void loop()
 {
     vCounter += 500;
 
-
+    if (vControlLed)
+    {
+        vControlLed = false;
+        digitalWrite(LedPIN, LOW);
+    }
+    else
+    {
+        vControlLed = true;
+        digitalWrite(LedPIN, HIGH);
+    }
 
     if (vFermentationSecondaire)
     {
